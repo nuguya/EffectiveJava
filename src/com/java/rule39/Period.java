@@ -4,7 +4,7 @@ import java.util.Date;
 
 public final class Period {
     private final Date start;
-    private final Date end;
+    public  Date end;
 
     public Period(Date start, Date end){
         this.start = new Date(start.getTime());
@@ -15,9 +15,9 @@ public final class Period {
         }
     }
     public Date start(){
-        return start;
+        return new Date(start.getTime());
     }
     public Date end(){
-        return end;
+        return new Date(end.getTime());
     }
 }

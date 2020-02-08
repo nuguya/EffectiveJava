@@ -8,7 +8,7 @@ public class Main {
         Date end = new Date();
         Period period = new Period(start,end);
 
-        period.end().setYear(78);
+        period.end.setYear(78);
         System.out.println(period.start());
         System.out.println(period.end());
     }
