@@ -1,7 +1,9 @@
 ## 1. 생성자 대신 정적 팩터리 메서드를 사용할 수 없는지 생각해 보라
 
 ## 왜 써야 할까
+
 Constructor의 한계
+
  * 생성자는 이름을 지을 수 없음.
  * 생성자는 항상 같은 타입의 Object를 return 함.
  * 생성자는 호출할 때마다 새로운 객체를 생성한다.
@@ -10,7 +12,6 @@ Constructor의 한계
 ## 가독성
 
 ``` Java
-
 public class Sandwitch {
     private int tomato;
     private int spam;
@@ -39,6 +40,7 @@ public class Sandwitch {
 
 
 ```
+
 #### 생성자를 통한 객체 생성
 
 ``` java
@@ -53,6 +55,7 @@ public class Sandwitch {
     Sandwitch tunaSandwitch = Sandwitch.tunaSandwitch();
 
 ```
+
 시그니처가 같은 메소드가 여러개 정의할 필요가 있을 때 어떤 객체를 생성하는지 메소드명으로 추론 가능하여 가독성을 높일 수 있다.
 
 ex) java.text.NumberFormat [NumberFormat](https://docs.oracle.com/javase/8/docs/api/)
@@ -94,6 +97,7 @@ public static BigInteger valueOf(long val) {
 2. 정적 팩토리 메서드가 다른 정적 메소드와 확연기 구분되지 않는다. (때문에 명명 규칙을 따르자)
 
 ## 의문
+
 * non public class를 반환한다는 것의 이점을 잘 이해하지 못하겠다.
 
 [참고자료1](https://javarevisited.blogspot.com/2017/02/5-difference-between-constructor-and-factory-method-in-java.html)
@@ -186,6 +190,7 @@ NutritionFacts cocaCola = new Builder(240,8).calories(100).sodium(35).carbohydra
 javascript에서는 객체를 인자로 넘겨 값을 설정 할 수 있는데 그것과 비슷한 효과를 내는 것 같다.
 
 빌더 패턴을 사용하면서 불변식 적용
+
 1. build 메서드 안에서 해당 불변식이 위반되었는지 검사
 2. 불변식이 적용될 값 전부를 인자로 받는 설정자 메소드 정의
 
@@ -194,6 +199,7 @@ javascript에서는 객체를 인자로 넘겨 값을 설정 할 수 있는데 �
 빌더 패턴은 인자가 많은 클래스를 설게할 때, 특히 대부분의 인자가 선택적 인자인 상황에 유용하다.
 
 ## 의문 
+
 스프링에서 setter로 의존성 주입을 하는 설정이 있는데 빌더 패턴에서도 적용이 가능할까
 
 
@@ -203,6 +209,7 @@ javascript에서는 객체를 인자로 넘겨 값을 설정 할 수 있는데 �
 
 
 # 4. 객체 생성을 막을 때는 private 생성자를 사용하라
+
 기본 생성자는 클래스에 생성자가 없을 때 만들어지니까, private 생성자를 클래스에 넣어서 객체 생성을 방지하자.
 
 # 5. 불필요한 객체는 만들지 말라
@@ -227,7 +234,6 @@ public static void main(String[] args){
 때문에 메모리 관리에 대한 정확한 이해가 없으면 심각한 메모리 누수가 발생할 여지가 있기 때문에 이를 조심해야 한다.
 
 ``` java
-
 import java.util.Arrays;
 import java.util.EmptyStackException;
 
@@ -287,7 +293,6 @@ C++의 소멸자와 그 개념이 다르다. 소멸자는 생성자와 쌍으로
 명시적 종료 메소드는 객체 종료를 보장하기 위해 try-finally 문과 함께 쓰인다.
 
 ``` java
-
   Connection conn = null;
     Statement stmt = null;
     ResultSet rs = null;
@@ -308,6 +313,7 @@ C++의 소멸자와 그 개념이 다르다. 소멸자는 생성자와 쌍으로
 ```
 
 #### 종료자를 사용하는 경우
+
 1. 명시적 종료 메서드 호출을 잊을 경우에 대비하는 안전망으로서의 역할 (반드시 로그를 남길 것)
 2. 네이티브 피어???
 
@@ -555,6 +561,7 @@ final class Tire {
 # 20. 태그 달린 클래스 대신 클래스 계층을 활용하라
 
 태그 달린 코드
+
 ``` java
 class Figure{
  enum Shape { RECTANGLE, CIRCLE };
@@ -589,8 +596,48 @@ class Figure{
  }
 }
 ```
+
 태그 달린 클래스는 enum 선언, 태그 필드, switch문 등의 상투적 코드가 반복되는 클래스가 만들어지며, 서로 다른 기능을 위한 코드가 한 클래스에 모여 있으니 가독성도 떨어진다. 
 또한 태그 기반 클래스에 새로운 기능을 추가하려면 소스 파일을 반드시 수정해야 한다. 수정할 때는 모든 스위치 문에 새로운 케이스를 올바르게 넣어야 한다.
+
+# 21. 전력을 표현하고 싶을 때는 함수 객체를 사용하라
+
+전략패턴 : C++ sort() 함수의 인자값으로 전해지는 함수포인터, 비교자 함수를 통해 정렬 전략을 표현 하는 것
+
+자바는 함수 포인터를 지원하지 않지만 객체 참조를 통해 비슷한 효과를 달성 할 수 있다. 
+
+```java
+class StringLengthComparator{
+  public int compare(String s1, String s2){
+    return s1.length() - s2.length();
+  }
+}
+```
+
+StringLengthComparator 객체에 대한 참조는 해당 비교자에 대한 함수 포인터 구실을 한다. 따라서 이는 실행가능 전략이다.
+
+해당 클래스는 무상태 클래스이다. 필드가 없으므로, 그 모든 객체는 기능적으로 동일하다. 따라서 싱글턴 패턴을 따르면 쓸데없는 객체 생성을 피할 수 있다.
+
+```java
+class StringLengthComparator{
+  private StringLengthComparator(){}
+  public static final StringLengthComparator INSTANCE = new StringLengthComparator();
+}
+```
+
+#### 익명 클래스로 정의
+
+```java
+Arrays.sort(stringArray, new Comparator<String>()){
+  public int compare(String s1, String s2){
+    return s1.length() - s2.length();
+  }
+}
+```
+
+익명 클래스를 사용할 때는 sort 호출 마다 새로운 객체가 만들어지기 때문에 위 코드가 여러번 수행되는 클래스라면 함수객체를 private static final 필드에 저장하고 재사용하는 것을 고려한다.
+
+Comparator와 같은 전략 인터페이스는 실행 가능 전략 객체들의 자료형 구실을 한다.
 
 # 25. 배열 대신 리스트를 써라
 
@@ -628,11 +675,11 @@ public enum Apple {FUJI, PIPPIN, GRANNY_SMITH }
 클라이언트가 접근 할 수 있는 생성자가 없기 때문에 final로 선언된 것이나 마찬가지이다.
 
 1. enum 자료형의 개체수는 엄격히 통제된다.
-
 2. enum 자료형은 컴파일 시점 형 안전성을 제공한다. Apple 형의 인자를 받는다고 선언한 메서드는 반드시 Apple 값 세게 가운데 하나만 인자로 받는다.
-
 3. enum 자료형은 같은 이름의 상수가 평화롭게 공존 할 수 있도록한다. 즉 이름공간이 분리된다.
 4. enum 자료형은 toString 메소드를 호출하면 인쇄가능 문자열로 쉽게 변환할 수 있다.
+
+#### enum은 고정 상수 집합 역할 뿐 아니라 데이터와 연산을 가질 수도 있다.
 
 ``` java
 package rule30;
@@ -692,6 +739,8 @@ public enum Operation {
     }
 }
 ```
+
+상수들이 각각 다르게 동작하도록 만드는 것을 구현할 경우,
 
 위 코드는 깨지기 쉬운 코드이다. 새로운 enum 상수를 추가할 때 마다 switch 문에 case를 추가해줘야 한다.
 
@@ -755,7 +804,6 @@ enum PayrollDay {
     private final PayType payType;
 
     PayrollDay(PayType payType) { this.payType = payType; }
-    // PayrollDay() { this(PayType.WEEKDAY); } // (역자 노트) 원서 4쇄부터 삭제
 
     int pay(int minutesWorked, int payRate) {
         return payType.pay(minutesWorked, payRate);
@@ -849,6 +897,91 @@ public class Text {
 ```
 
 EnumSet 클래스는 비트 필드만큼 간결하고 성능도 우수할 뿐 아니라 enum 자료형의 여러가지 장점을 전부 갖추고있다.
+
+# 35. 작명 패턴 대신 어노테이션을 사용하라
+
+```java
+// 어노테이션 자료형 선언
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+//Meta 어노테이션
+@Retention(RetentionPolicy.RUNTIME) // runtime에 포함되어야함.
+@Target(ElementType.METHOD) // Method만을 대상으로 함
+public @interface MyTest {
+}
+```
+
+``` java
+public class TestSample {
+	@MyTest
+	public static void m1() {
+	}
+
+	// annotation이 없어서 테스트 대상이 아님.
+	public static void m2() {
+	}
+	
+	@MyTest
+	public static void m3() {
+		throw new RuntimeException("boom boom boom");
+	}
+
+	// annotation이 없어서 테스트 대상이 아님.	
+	public static void m4() {
+	}
+	
+	@MyTest
+	public void m5() {
+	}
+	
+	public static void m6() {
+	}
+	
+	@MyTest
+	public static void m7() {
+		throw new RuntimeException("crash");
+	}
+	
+	public static void m8() {
+	}
+}
+```
+
+어노테이션은 sample class가 동작하는데 직접적 영향을 끼치지는 않지만 해당 어노테이션에 관심 있는 프로그램에게 유용한 정보를 제공한다. 
+
+어노테이션은 어노테이션이 적용된 프로그램의 동작에는 절대 개입하지 않으며, 테스트 실행기와 같은 프로그램이 특별히 다루어야 하는 부분을 선언할 수 있도록 해준다.
+
+```java
+public class RunMyTests {
+	public static void main(String[] args) throws Exception {
+		int tests = 0;
+		int passed = 0;
+		Class testClass = Class.forName(args[0]);
+		for (Method m : testClass.getDeclaredMethods()) {
+			if (m.isAnnotationPresent(MyTest.class)) {
+				tests++;
+				try {
+					m.invoke(null);
+					passed++;
+				} catch (InvocationTargetException e) {
+					System.err.println(m + "failed: " + e);
+				} catch (Exception e) {
+					System.err.println("INVALID @MyTest: " + m);
+				}
+			}
+		}
+		
+		System.out.printf("Passed: %d, Failed: %d%n",
+				passed, tests - passed);
+	}
+}
+```
+
+이 테스트 실행기는 Test 어노테이션이 붙은 메서드를 전부 찾아 실행한다. isAnnotationPresent 메서드는 실행해야 하는 테스트 메서드를 찾는 용도로 사용된다.
 
 # 38 인자의 유효성을 검사하라
 
@@ -1402,5 +1535,4 @@ String은 immutable 객체이기 때문에 + 연산시 새로 객체를 생성�
 * 객체의 자료형을 변환하는 메서드, 다른 자료형의 독립적 객체를 반환하는 메서드에는 보통  toType 형태의 이름을 붙인다.
 * 인로 전달받은 객체와 다른 자료형의 view 객체를 반환하는 메서드에는  asType 형태의 이름을 붙인다.
 * boolean 형의 필드에는 보통 boolean 메서드와 같은 이름을 붙이나, 접두어  is는 생략한다.
-
 
