@@ -1043,7 +1043,132 @@ public class Main {
 
 
 
+# 41. 오버로딩할 때는 주의하라
+
+``` java
+public class CollectionClassifier {
+    public static String classify(Set<?> s){
+        return "Set";
+    }
+
+    public static String classify(List<?> lst){
+        return "List";
+    }
+
+    public static String classify(Collection<?> c){
+        return "Unknown Collection";
+    }
+
+
+    public static void main(String[] args){
+        Collection<?>[] collections = {
+                new HashSet<String>(),
+                new ArrayList<BigInteger>(),
+                new HashMap<String,String>().values()
+        };
+
+        for(Collection<?> c : collections){
+            System.out.println(classify(c));
+        }
+    }
+}
+```
+
+위 프로그램은 Unknown Collection을 세번 출력 한다. 
+
+Classify 메서드가 오버로딩되어 있으며, 오버로딩된 메서드 가운데 어떤 것이 호출될지는 컴파일 시점에 결정되기 때문이다.
+
+컴파일 시점 자료형은 전부 Collection<?>으로 동일하지만 각 인자의 실행시점 자료형이 다르다.
+
+인자의 컴파일 시점 자료형이 Collection<?>이므로, 호출되는 것은 항상 classfy(Collection<?>) 메서드이다.
+
+#### 오버로딩된 메서드는 정적으로 선택되지만, 오버라이딩 메소드는 동적으로 선택된다
+
+오버로딩 메소드는 실행시점 자료형이 아무 영향도 주지 못한다. 실행될 메서드는 컴파일 시에, 인자의 컴파일 시점 자료형만을 근거로 결정된다.
+
+위 예제는 실생시점 자료형을 근거로 오버로딩된 메소드 가운데 적절한 것을 자동으로 실행해서 인자의 자료형을 구별하려 했지만 다음과 같은 근거로 정상적으로 동작할 수 없다.
+
+#### 오버로딩을 사용할 때는 혼란스럽지 않게 사용할 수 있도록 주의 해야한다
+
+혼란을 피하는 전략은 같은 수의 인자를 갖는 두 개의 오버로딩 메소드를 API에 포함시키지 않는 것이다.
+
+```java
+public class SetList {
+    public static void main(String[] args){
+        Set<Integer> set = new TreeSet<Integer>();
+        List<Integer> list = new ArrayList<Integer>();
+
+        for(int i=-3;i<3;i++){
+            set.add(i);
+            list.add(i);
+        }
+        for(int i=0;i<3;i++){
+            set.remove(i);
+            list.remove(i);
+        }
+
+        System.out.println(set+" "+list);
+    }
+}
+```
+
+List<E> 인터페이스에 remove(E)와 remove(int)라는 오버로딩 메서드 두 개가 존재하기 때문에 발생하는 문제. 자동형변환으로 인해 list.remove(int)가 호출하여 position에 있는 값을 지운다.
+
+형변환을 통해 인자 타입을 변경할 수 있는 자료형에 대한 오버로딩을 동시에 적용하는 것은 위험하다.
+
 # 43 null 대신 빈 배열이나 컬렉션을 반환하라
+
+``` java
+private final List<Cheese> cheesesInStock = ...;
+
+public Cheese[] getCheese(){
+  if (cheesesInStock.size() == 0)
+    return null;
+}
+```
+
+위 코드는 클라이언트 입장에서  null이 반환될 때를 대비한 코드를 만들어야 한다.
+
+```java
+Cheese[] cheeses = shop.getCheeses();
+
+if(cheese != null && Arrays.asList(cheeses).contains(Cheese.STILON))
+  System.out.println("blabla");
+```
+
+```java
+if(Arrays.asList(cheeses).contains(Cheese.STILON))
+  System.out.println("blabla");
+```
+
+길이가 0인 배열은 immutable 하므로 아무런 제약 없이 재사용 할 수 있다.
+
+```java
+// 컬렉션에서 배열을 만들어 반환하는 올바른 방법
+
+private final List<Cheese> cheesesInStock = ...;
+
+private static final Cheese[] EMPTY_CHEESE_ARRAY = new Cheese[0];
+
+public Cheese[] getCheeses(){
+  return cheesesInStock.toArray(EMPTY_CHEESE_ARRAY);
+}
+```
+
+toArray 메서드에 전달되는 빈 배열 상수는 반환값의 자료형을 명시하는 역할을 한다. 보통 toArray는 반환되는 원소가 담길 배열을 스스로 할당하는데, 컬렉션이 비어 있는 경우 인자로 주어진 배열을 쓴다.
+
+```java
+// 컬렉션 복사본을 반환하는 올바른 방법
+
+public List<Cheese> getCheeseList(){
+	if(cheeseInStock.isEmpty())
+    return Collections.emptyList();
+  else
+    return new ArrayList<Cheese>(cheesesInStock);
+} 
+```
+
+#### null 대신 빈 배열이나 빈 컬렉션을 반환하라.
 
 # 45 지역 변수의 유효범위를 최소화하라
 
@@ -1098,6 +1223,10 @@ For-each 문으로는 컬렉션과 배열뿐 아니라 Iterable 인터페이스�
 
 # 47 어떤 라이브러리가 있는지 파악하고, 적절히 활용하라
 
+바퀴를 다시 발명하지마라, 흔하게 쓰일법한 무언가를 개발해야 한다면, 라이브러리를 뒤져보고 있다면 그것을 사용하라
+
+일반적으로 직접 만드는 것 보다 라이브러리에 있는 코드가 더 낫다.
+
 # 48 정확한 답이 필요하다면 float와 double은 피하라
 
 ``` java
@@ -1135,5 +1264,143 @@ public static void main(String[] args){
 #### BigDecimal을 쓰는 방법에 대한 문제
 
 1. 기본 산술연산 자료형보다 사용이 불편하며 느리다 -> int나 long을 사용
+
+# 49. 객체화된 기본자료형 대신 기본 자료형을 이용하라
+
+#### 객체화된 기본자료형 : Integer,Double,Boolean
+
+autoboxing : 기본자료형을 객체화된 기본자료형으로 자동적으로 변환
+
+auto-unboxing : 객체화된 기본자료형을 기본자료형으로 자동적으로 변환
+
+이 기능들은 기본 자료형과 그 객체 표현형 간의 차이를 희미하게 만든다. 때문에 이 둘 사이에 실질적인 차이를 이해하고 어떤 상황에서 사용할 것인지 신중하게 고르는게 중요하다.
+
+#### 객체화된 기본 자료형과 기본 자료형의 차이
+
+1. 객체화된 기본자료형은 신원을 가진다. 따라서 객체화된 기본 자료형 객체가 두 개 있을  때, 그 값은 같더라도 신원이 다를 수 있다.
+
+2. 기본 자료형에 저장되는 값은 전부 기능적으로 완전한 값이지만, 객체화된 기본 자료형에 저장되는 값에는 null이 들어갈 수 있다.
+3. 기본 자료형은 시간이나 공간 요규량 측면에서 일반적으로 객체 표현형보다 효율적이다.
+
+``` java
+Comparator<Integer> naturalOrder = new Comparator<Integer>(){
+  public int compare(Integer first, Integer second){
+    return firsr < second ? -1 : (first == second ? 0: 1);
+  }
+}
+
+naturalOrder.compare(new Integer(42), new Integer(42)) // 오류 발생
+```
+
+두 Integer 객체는 42라는 동일한 값을 나타내므로 이 표현식이 반환하는 값은 0이어야 한다. 하지만 실제로 반환되는 값은 1이다.
+
+* first < second 는 Integer 객체를 기본 자료형 값으로 자동 변환.
+* first의 값이  second보다 작지 않을 때 두 번째로 계산되는 표현식은 first==second이다.
+* == 연산자는 객체 참조를 통해 두 객체의 신원을 비교한다. 
+* 따서 f irst와  second가 다른 객체일 경우 ==는 false를 반환하므로 비교자는 1을반환한다.
+
+#### 객체화된 기본 자료형에 == 연산자를 사용하는 것은 거의 항상 오류이다
+
+위의 문제를 해결하는 방법 : int 변수에 auto-unboxing을 통해 기본자료형으로 비교.
+
+``` java
+Comparator<Integer> naturalOrder = new Comparator<Integer>(){
+  public int compare(Integer first, Integer second){
+    int f = first; //auto-unboxing
+    int s = second;
+    return f < s ? -1 : (f == s ? 0: 1);
+  }
+}
+```
+
+``` Java
+public class Unbelevable{
+  static Integer i;
+  
+  public static void main(String[] args){
+    if(i == 42)
+      System.out.println("언블리버블");
+  }
+}
+```
+
+위 코드는 i==42를 계산할 때 NullPointerException을 발생시킨다. 
+
+기본 자료형과 객체화된 기본 자료형을 한 연산 안에 엮어 놓으면 객체화된 기본 자료형은 자동으로 기본 자료형으로 변환된다. 따라서 null 객체 참조를 기본 자료형으로 변환하려 시도하여 NullPountException이 발생한다.
+
+# 50 다른 자료형이 적절하다면 문자열 사용은 피하라
+
+#### 문자열은 값 자료형을 대신하기에는 부족하다
+
+데이터가 네트워크나 키보드를 통해서 들어올 때는 보통 문자열 형태로인데 그 때 그대로 두려는 것은 좋지 않다. 데이터가 원래 텍스트 형태일 때나 그렇게하고 숫자라면 기본 자료형으로 변환해서 사용한다.
+
+#### 문자열은  enum 자로형을 대신하기에는 부족하다
+
+enum은 문자열보다 훨씬 좋은 열거 자료형 상수들을 만들어 낸다.
+
+#### 문자열은 혼한 자료형을 대신하기엔 부족하다
+
+```java
+String compoundKey = className + "#" +i.next();
+```
+
+1. 필드 구분자로 사용한 문자가 필드 안에 들어가버리면 문제가 발생.
+2. 각 필드를 사용하려면 문자열을 파싱해야 하는 오버헤드 발생
+3. Equals, toString, compareTo 메서드 같은 것을 제공할 수 없고 String이 제공하는 기능들만 이용해야함.
+4. 혼 자료형을 표현할 클래스를 만드는 편이 낫다
+
+#### 문자열은 권한을 표현하기엔 부족하다
+
+``` java
+// 클라이언트가 제공한 문자열 키로 스레드 지역 변수를 식별하도록 하는 설계
+public calss ThreadLocal{
+  private ThreadLocal(){}
+  
+  public static void set(String key, Object value);
+  
+  public static Object get(String Key);
+}
+```
+
+문자열이 스레드 지역 변수의 전역적인 namespace이다. 위 접근법이 통하려면 클라이언트가 제공하는 문자열의 키 유일성이 보장되어야 한다. 또한 악의적인 클라이언트가 같은 문자열 접근을 통해 다른 클라이언트의 데이터에 접글할 수 있게 된다.
+
+# 51. 문자열 연결 시 성능에 주의하라
+
+String은 immutable 객체이기 때문에 + 연산시 새로 객체를 생성해서 반환한다. 따라서 + 연산이 많이 사용될 때는 String 대신 StringBuilder를 사용하는 것이 낫다.
+
+# 52. 객체를 참조할 때는 그 인터페이스를 사용하라
+
+#### 적당한 인터페이스 자료형이 있다면 인자나 반환값, 변수, 필드의 자료형은 클래스 대신 인터페이스로 선언하자
+
+인터페이스를 자료형으로 사용하면 프로그램은 더욱 유연해진다.
+
+# 55. 신중하게 최적화 하라
+
+* 빠른 프로그램이 아닌, 좋은 프로그램을 만들려 노력하라
+* 설계를 할 때는 성능을 제약할 가능성이 있는 결정들은 피하라
+* 잘 설계된 API는 일반적으로 좋은 성능을 보인다
+
+빠른 프로그램을 만들고자 애쓰는 것 보다 좋은 프로그램을 짜기 위해 노력하면 성능은 따라올 것이다. 하지만 모든 문제에 이런 관점을 적용시키기 보다는 시스템의 특성을 잘 파악하고 사고를 유연하게 가질 필요가 있다. 
+
+# 56. 일반적으로 통용되는 작명 관습을 따르라
+
+* 패키지 이름은 마침표를 구분점으로 사용하는 계층적 이름
+  * 알파벳 소문자, 숫자는 거의 사용하지 않음
+  * 최상위 도메인 이름이 먼저온다.
+  * 패키지명 컴포넌트는 짧아야 하며, 보통 여덟 문자 이하
+  * 패키지명 상당수는 도메인 이름 외 단 하나의 컴포넌트만 사용하고 여러 개의 정보 계층으로 나눠야할 큰 기능이라면 추가 컴포넌트를 사용한다.
+* enum이나 어노테이션 자료형 이름을 비롯, 클래스나 인터페이스 이름은 하나 이상의 단어로 구성
+  * 각 단어의 첫 글자는 대문자
+  * cameCase 적용
+* 메서드나 필드 이름은 클래스나 인터페이스 이름과 동일한 철자 규칙을 따른다
+  * 첫 글자는 소문자
+  * 상수 필드는 하나이상의 대문자로 구성되며 단어사이는 밑줄을 통해 구분한다.
+* 메드는 일반적으로 동사나 동사구를 이름으로 사용
+  * boolean 값을 반환하는 메서드의 이름은 보통 is, has
+  * 객체 속성을 반환하는 메서드는 명사나 명사구 또는 보통 get으로 시작하는 동사구를 이름으로 붙인다.
+* 빈 클래스에 속한 메서드의 이름은 반드시 g et으로 시작해야 한다
+* 객체의 자료형을 변환하는 메서드, 다른 자료형의 독립적 객체를 반환하는 메서드에는 보통  toType 형태의 이름을 붙인다.
+* 인로 전달받은 객체와 다른 자료형의 view 객체를 반환하는 메서드에는  asType 형태의 이름을 붙인다.
+* boolean 형의 필드에는 보통 boolean 메서드와 같은 이름을 붙이나, 접두어  is는 생략한다.
 
 
